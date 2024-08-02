@@ -158,9 +158,9 @@ pub(crate) async fn get(
         };
 
         if let Some(aggregate) = endpoint.get_aggregate_column(column) {
-            having.push(format!("{} {} {}", aggregate.formula, operator, value));
+            having.push(format!("{} {} '{}'", aggregate.formula, operator, value));
         } else if schema.has_column_with_unqualified_name(column) {
-            wheres.push(format!("{} {} {}", column, operator, value));
+            wheres.push(format!("{} {} '{}'", column, operator, value));
         } else {
             return failure(
                 status::StatusCode::BAD_REQUEST,
@@ -200,7 +200,7 @@ pub(crate) async fn get(
         columns.join(", "),
         dataset_name,
         if !wheres.is_empty() {
-            format!(" WHERE {}", wheres.join(", "))
+            format!(" WHERE {}", wheres.join(" AND "))
         } else {
             "".to_string()
         },
@@ -230,6 +230,8 @@ pub(crate) async fn get(
             "".to_string()
         },
     );
+
+    info!("{}", query);
 
     sql_to_http_response(df, &query, None).await
 }
