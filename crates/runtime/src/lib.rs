@@ -62,6 +62,7 @@ use spicepod::component::model::{Model as SpicepodModel, ModelType};
 use tls::TlsConfig;
 use tokio::sync::oneshot::error::RecvError;
 use tokio::sync::RwLock;
+use spicepod::component::endpoint::Endpoint;
 use tracing_util::dataset_registered_trace;
 use util::fibonacci_backoff::FibonacciBackoffBuilder;
 pub use util::shutdown_signal;
@@ -572,6 +573,26 @@ impl Runtime {
             .collect()
     }
 
+    /// Returns a list of valid views from the given App, skipping any that fail to parse and logging an error for them.
+    fn get_valid_endpoints(app: &App, log_errors: LogErrors) -> Vec<Endpoint> {
+        app.endpoints
+            .iter()
+            .cloned()
+            .map(Endpoint::try_from)
+            .zip(&app.endpoints)
+            .filter_map(|(endpoint, spicepod_endpoint)| match endpoint {
+                Ok(view) => { Some(view) }
+                Err(e) => {
+                    if log_errors.0 {
+                        metrics::counter!("endpoint_load_error").increment(1);
+                        tracing::error!(view = &spicepod_endpoint.name, "{e}");
+                    }
+                    None
+                }
+            })
+            .collect()
+    }
+
     async fn load_catalogs(&self) {
         let app_lock = self.app.read().await;
         let Some(app) = app_lock.as_ref() else {
@@ -622,6 +643,16 @@ impl Runtime {
             };
         }
     }
+
+    // fn load_endpoints(&self, app: &App) {
+    //     let endpoints: Vec<Endpoint> = Self::get_valid_endpoints(app, LogErrors(true));
+    //
+    //     for endpoint in &endpoints {
+    //         if let Err(e) = self.load_view(endpoint, valid_datasets) {
+    //             tracing::error!("Unable to load view: {e}");
+    //         };
+    //     }
+    // }
 
     async fn load_catalog(&self, catalog: &Catalog) {
         let spaced_tracer = Arc::clone(&self.spaced_tracer);
@@ -700,6 +731,21 @@ impl Runtime {
 
         Ok(())
     }
+
+    // fn load_endpoint(&self, endpoint: &Endpoint) -> Result<()> {
+    //     if !verify_dependent_tables(view, &existing_tables) {
+    //         return UnableToCreateViewSnafu {
+    //             reason: "One or more tables in the view's SQL statement do not exist.".to_string(),
+    //         }
+    //         .fail();
+    //     }
+    //
+    //     let df = Arc::clone(&self.df);
+    //     df.register_view(view.name.clone(), view.sql.clone())
+    //         .context(UnableToAttachViewSnafu)?;
+    //
+    //     Ok(())
+    // }
 
     async fn load_catalog_connector(&self, catalog: &Catalog) -> Result<Arc<dyn DataConnector>> {
         let spaced_tracer = Arc::clone(&self.spaced_tracer);

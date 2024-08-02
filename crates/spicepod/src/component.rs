@@ -32,6 +32,7 @@ pub mod params;
 pub mod runtime;
 pub mod secret;
 pub mod view;
+pub mod endpoint;
 
 pub trait Nameable {
     fn name(&self) -> &str;

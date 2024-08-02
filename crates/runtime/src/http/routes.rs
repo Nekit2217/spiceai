@@ -64,6 +64,7 @@ pub(crate) fn routes(
         )
         .route("/v1/spicepods", get(v1::spicepods::get))
         .route("/v1/ready", get(v1::ready::get))
+        .route("/v1/api/:name", get(v1::rest::get))
         .route_layer(middleware::from_fn(track_metrics));
 
     if cfg!(feature = "models") {

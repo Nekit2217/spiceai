@@ -30,6 +30,7 @@ use spicepod::{
         runtime::{ResultsCache, Runtime, TlsConfig},
         secret::Secret,
         view::View,
+        endpoint::Endpoint,
     },
     Spicepod,
 };
@@ -47,6 +48,8 @@ pub struct App {
     pub datasets: Vec<Dataset>,
 
     pub views: Vec<View>,
+
+    pub endpoints: Vec<Endpoint>,
 
     pub models: Vec<Model>,
 
@@ -75,6 +78,7 @@ pub struct AppBuilder {
     catalogs: Vec<Catalog>,
     datasets: Vec<Dataset>,
     views: Vec<View>,
+    endpoints: Vec<Endpoint>,
     models: Vec<Model>,
     embeddings: Vec<Embeddings>,
     spicepods: Vec<Spicepod>,
@@ -89,6 +93,7 @@ impl AppBuilder {
             extensions: HashMap::new(),
             catalogs: vec![],
             datasets: vec![],
+            endpoints: vec![],
             views: vec![],
             models: vec![],
             embeddings: vec![],
@@ -103,6 +108,7 @@ impl AppBuilder {
         self.extensions.extend(spicepod.extensions.clone());
         self.catalogs.extend(spicepod.catalogs.clone());
         self.datasets.extend(spicepod.datasets.clone());
+        self.endpoints.extend(spicepod.endpoints.clone());
         self.views.extend(spicepod.views.clone());
         self.models.extend(spicepod.models.clone());
         self.embeddings.extend(spicepod.embeddings.clone());
@@ -141,6 +147,12 @@ impl AppBuilder {
     }
 
     #[must_use]
+    pub fn wind_endpoint(mut self, endpoint: Endpoint) -> AppBuilder {
+        self.endpoints.push(endpoint);
+        self
+    }
+
+    #[must_use]
     pub fn with_model(mut self, model: Model) -> AppBuilder {
         self.models.push(model);
         self
@@ -173,6 +185,7 @@ impl AppBuilder {
             catalogs: self.catalogs,
             datasets: self.datasets,
             views: self.views,
+            endpoints: self.endpoints,
             models: self.models,
             embeddings: self.embeddings,
             spicepods: self.spicepods,
@@ -189,6 +202,7 @@ impl AppBuilder {
         let extensions = spicepod_root.extensions.clone();
         let mut catalogs: Vec<Catalog> = vec![];
         let mut datasets: Vec<Dataset> = vec![];
+        let mut endpoints: Vec<Endpoint> = vec![];
         let mut views: Vec<View> = vec![];
         let mut models: Vec<Model> = vec![];
         let mut embeddings: Vec<Embeddings> = vec![];
@@ -203,6 +217,10 @@ impl AppBuilder {
 
         for view in &spicepod_root.views {
             views.push(view.clone());
+        }
+
+        for endpoint in &spicepod_root.endpoints {
+            endpoints.push(endpoint.clone());
         }
 
         for model in &spicepod_root.models {
@@ -231,6 +249,9 @@ impl AppBuilder {
             for view in &dependent_spicepod.views {
                 views.push(view.clone());
             }
+            for endpoint in &dependent_spicepod.endpoints {
+                endpoints.push(endpoint.clone());
+            }
             for model in &dependent_spicepod.models {
                 models.push(model.clone());
             }
@@ -249,6 +270,7 @@ impl AppBuilder {
             catalogs,
             datasets,
             views,
+            endpoints,
             models,
             embeddings,
             spicepods,

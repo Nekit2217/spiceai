@@ -28,6 +28,7 @@ use crate::component::secret::Secret;
 use crate::component::{
     dataset::Dataset, extension::Extension, model::Model, view::View, ComponentOrReference,
 };
+use crate::component::endpoint::Endpoint;
 
 #[derive(Clone, PartialEq, Debug, Serialize, Deserialize)]
 #[cfg_attr(feature = "schemars", derive(JsonSchema))]
@@ -91,6 +92,10 @@ pub struct SpicepodDefinition {
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default)]
     pub views: Vec<ComponentOrReference<View>>,
+
+    #[serde(skip_serializing_if = "Vec::is_empty")]
+    #[serde(default)]
+    pub endpoints: Vec<ComponentOrReference<Endpoint>>,
 
     #[serde(skip_serializing_if = "Vec::is_empty")]
     #[serde(default)]
